@@ -1,6 +1,7 @@
 import { faEdit, faEnvelope, faInfoCircle, faMapMarkerAlt, faPhone, faPlus, faTrash, faUser } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {React, useState} from 'react'
+import {React, useState, useEffect} from 'react'
+import { addDocument, deleteDocument, editDocument, getCollection } from '../services/actions';
 import Footer from './Footer';
 import Navbar from './Navbar';
 
@@ -18,13 +19,27 @@ function App() {
   const [patients, setPatients] = useState([])
   const [idSelected, setIdSelected] = useState('')
   const [isEdit, setIsEdit] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [errors, setErrors] = useState([])
 
-  const addPatient = () => {
+  useEffect(() => {
+    (async () => {
+      const result = await getCollection('patients');
+      if(result.statusResponse){
+        setTimeout(() => {
+          setPatients(result.data)
+          setIsLoading(false)
+        }, 1000);
+      }else{
+        alert("Ocurrio un error al consultar los pacientes 😒")
+      }
+    })()
+  }, [])
+
+  const addPatient = async () => {
     if(!validation()) return;
-    
+
     const patient = {
-      id: Date.now().toString(),
       name,
       type,
       birthDate,
@@ -34,16 +49,22 @@ function App() {
       address, 
       email
     }
-    setPatients([...patients, patient])
+
+    const result = await addDocument("patients", patient);
+    if(result.statusResponse){
+      patient.id = result.data.id
+      setPatients([...patients, patient])
+    }else{
+      alert("Ocurrio un error al añadir el paciente 😒")
+    }
     document.getElementById("modalClose").click()
   }
 
-  const updatePatient = (id) => {
+  const updatePatient = async (id) => {
 
     if(!validation()) return;
     
     const patient = {
-      id,
       name,
       type,
       birthDate,
@@ -53,14 +74,27 @@ function App() {
       address, 
       email
     }
-    const newPatients = patients.map(p => p.id === id ? patient : p)
-    setPatients(newPatients)
+
+    const result = await editDocument("patients", id, patient)
+
+    if(result.statusResponse){
+      patient.id = id;
+      const newPatients = patients.map(p => p.id === id ? patient : p)
+      setPatients(newPatients)
+    }else {
+      alert("Ocurrio un error al editar el paciente 😒")
+    }
     document.getElementById("modalClose").click()
   }
 
-  const deletePatient = (id) => {
-    const newPatients = patients.filter(p => p.id !== id)
-    setPatients(newPatients)
+  const deletePatient = async (id) => {
+    const result = await deleteDocument("patients", id)
+    if(result.statusResponse){
+      const newPatients = patients.filter(p => p.id !== id)
+      setPatients(newPatients)
+    }else{
+      alert("Ocurrio un error al eliminar el paciente 😒")
+    }
   }
 
   const clearFields = () => {
@@ -108,6 +142,7 @@ function App() {
   return (
     <div className="pb-5">
       <Navbar/>
+      
       <div className="container pb-5">
         <div className="row mt-2">
           <div className="col-10">
@@ -119,6 +154,8 @@ function App() {
             </button>
           </div>
         </div>
+
+        
         
         {
           patients.length > 0 ? (
@@ -154,10 +191,17 @@ function App() {
             </table>
           ) : 
           (
-            <div className="div">
-              <h5 className=" text-center">No hay pacientes</h5>
-              <center><img srcSet={"./empty.png"} width="40%" alt="emptyImage"/></center>
-            </div>
+            isLoading ? 
+            (<div className="text-center mt-2 ">
+              <div className="spinner-border" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <h4>Cargando</h4>
+            </div>) : 
+            (<div className="div">
+                <h5 className=" text-center">No hay pacientes</h5>
+                <center><img srcSet={"./empty.png"} width="40%" alt="emptyImage"/></center>
+              </div>) 
           )
         }
       </div>
