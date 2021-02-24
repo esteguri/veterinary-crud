@@ -18,8 +18,11 @@ function App() {
   const [patients, setPatients] = useState([])
   const [idSelected, setIdSelected] = useState('')
   const [isEdit, setIsEdit] = useState(false)
+  const [errors, setErrors] = useState([])
 
   const addPatient = () => {
+    if(!validation()) return;
+    
     const patient = {
       id: Date.now().toString(),
       name,
@@ -32,10 +35,13 @@ function App() {
       email
     }
     setPatients([...patients, patient])
-    clearFields()
+    document.getElementById("modalClose").click()
   }
 
   const updatePatient = (id) => {
+
+    if(!validation()) return;
+    
     const patient = {
       id,
       name,
@@ -47,13 +53,13 @@ function App() {
       address, 
       email
     }
-    const newPatients = patients.map(p => p.id == id ? patient : p)
+    const newPatients = patients.map(p => p.id === id ? patient : p)
     setPatients(newPatients)
-    clearFields()
+    document.getElementById("modalClose").click()
   }
 
   const deletePatient = (id) => {
-    const newPatients = patients.filter(p => p.id != id)
+    const newPatients = patients.filter(p => p.id !== id)
     setPatients(newPatients)
   }
 
@@ -67,6 +73,7 @@ function App() {
     setAddress('')
     setEmail('')
     setIsEdit(false)
+    setErrors([])
   }
 
   const setInfoPatient = (patient, isEdit = false) => {
@@ -80,6 +87,22 @@ function App() {
     setAddress(patient.address)
     setEmail(patient.email)
     setIsEdit(isEdit)
+  }
+
+  const validation = () => {
+    let valErrors = []
+
+    name === "" && valErrors.push("name")
+    type === "" && valErrors.push("type")
+    birthDate === "" && valErrors.push("birthDate")
+    ownerName === "" && valErrors.push("ownerName")
+    tel === "" && valErrors.push("tel")
+    address === "" && valErrors.push("address")
+
+    console.log(valErrors)
+    
+    setErrors(valErrors)
+    return valErrors.length === 0
   }
 
   return (
@@ -133,7 +156,7 @@ function App() {
           (
             <div className="div">
               <h5 className=" text-center">No hay pacientes</h5>
-              <center><img srcSet={"./empty.png"} width="40%" /></center>
+              <center><img srcSet={"./empty.png"} width="40%" alt="emptyImage"/></center>
             </div>
           )
         }
@@ -148,28 +171,40 @@ function App() {
               <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div className="modal-body">
-              <form className="row g-3 needs-validation mt-2" noValidate>
+              <form className="row g-3 needs-validation mt-2" noValidate onSubmit={validation}>
 
                 <div className="col-lg-6 col-md-12 row mb-1">
                   <h5 className="text-success">Datos del paciente</h5>
                   <div className="col-12">
                     <label htmlFor="name" className="form-label">Nombre de la mascota:</label>
-                    <input type="text" className="form-control" id="name" placeholder="Nombre de la mascota..." onChange={(text)=>setName(text.target.value)} value={name} ></input>
+                    <input type="text" className={errors.includes("name") ? "form-control is-invalid" : "form-control"} id="name" required placeholder="Nombre de la mascota..." onChange={(text)=>setName(text.target.value)} value={name} ></input>
+                    <div className="invalid-feedback">
+                        El nombre de la mascota es obligatorio
+                    </div>
                   </div>
                   <div className="col-6">
                     <label htmlFor="type" className="form-label">Tipo:</label>
-                    <select className="form-select" id="type" onChange={(text)=>setType(text.target.value)} value={type} >
-                      <option defaultValue >Seleccione...</option>
+                    <select id="type" 
+                      className={errors.includes("type") ? "form-control is-invalid" : "form-control"}
+                      onChange={(text)=>setType(text.target.value)} value={type} >
+                      <option defaultValue value="" >Seleccione...</option>
                       <option value="Perro">Perro</option>
                       <option value="Gato">Gato</option>
                       <option value="Conejo">Conejo</option>
                       <option value="Ave">Ave</option>
                       <option value="Otro">Otro</option>
                     </select>
+                    <div className="invalid-feedback">
+                        El tipo es obligatorio
+                    </div>
                   </div>
                   <div className="col-6">
                     <label htmlFor="birthDate" className="form-label">Fecha de nacimiento:</label>
-                    <input type="date" className="form-control" id="birthDate" onChange={(text)=>setBirthDate(text.target.value)} value={birthDate}></input>
+                    <input type="date" className={errors.includes("birthDate") ? "form-control is-invalid" : "form-control"} 
+                      id="birthDate" onChange={(text)=>setBirthDate(text.target.value)} value={birthDate}></input>
+                    <div className="invalid-feedback">
+                        La fecha de nacimiento es obligatoria
+                    </div>
                   </div>
                   <div className="col-12">
                     <label htmlFor="breed" className="form-label">Raza:</label>
@@ -179,29 +214,44 @@ function App() {
 
                 <div className="col-lg-6 col-md-12 row mb-1">
                   <h5 className="text-success">Datos del propietario</h5>
-                  <div className="col-12 mt-2">
+                  <div className="col-12 mt-12">
                     <label htmlFor="ownerName" className="form-label">Nombres y apellidos:</label>
-                    <input type="text" className="form-control" id="ownerName" placeholder="Nombre del propietario..." onChange={(text)=>setOwnerName(text.target.value)} value={ownerName}></input>
+                    <input type="text" id="ownerName" placeholder="Nombre del propietario..." 
+                    className={errors.includes("ownerName") ? "form-control is-invalid" : "form-control"}
+                    onChange={(text)=>setOwnerName(text.target.value)} value={ownerName}></input>
+                    <div className="invalid-feedback">
+                        El nombre del propietario es obligatorio
+                    </div>
                   </div>
-                  <div className="col-12 mt-2">
-                    <label htmlFor="tel" className="form-label">Telefono:</label>
-                    <input type="text" className="form-control" id="tel" placeholder="Telefono"  onChange={(text)=>setTel(text.target.value)} value={tel}></input>
+                  <div className="col-12 mt-12">
+                    <label htmlFor="tel" className="form-label">Teléfono:</label>
+                    <input type="text" 
+                      className={errors.includes("tel") ? "form-control is-invalid" : "form-control"}
+                     id="tel" placeholder="Teléfono"  onChange={(text)=>setTel(text.target.value)} value={tel}></input>
+                    <div className="invalid-feedback">
+                        El teléfono es obligatorio
+                    </div>
                   </div>
-                  <div className="col-12 mt-2">
+                  <div className="col-12 mt-12">
                     <label htmlFor="address" className="form-label">Dirección de residencia:</label>
-                    <input type="address" className="form-control" id="address" placeholder="Dirección" onChange={(text)=>setAddress(text.target.value)} value={address}></input>
+                    <input type="address" className={errors.includes("address") ? "form-control is-invalid" : "form-control"}
+                     id="address" placeholder="Dirección" onChange={(text)=>setAddress(text.target.value)} value={address}></input>
+                    <div className="invalid-feedback">
+                        La dirección es obligatoria
+                    </div>
                   </div>
-                  <div className="col-12 mt-2">
+                  <div className="col-12 mt-12">
                     <label htmlFor="email" className="form-label">Correo:</label>
-                    <input type="email" className="form-control" id="email" placeholder="Correo" onChange={(text)=>setEmail(text.target.value)} value={email}></input>
+                    <input type="email" className="form-control" id="email" placeholder="Correo"
+                     onChange={(text)=>setEmail(text.target.value)} value={email}></input>
                   </div>
                 </div>
                 
               </form>
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-              <button type="button" className="btn btn-success" data-bs-dismiss="modal" onClick={() => isEdit ? updatePatient(idSelected) :  addPatient()}>{isEdit ? 'Editar' : 'Registrar'}</button>
+              <button type="button" id="modalClose" className="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+              <input type="submit" className="btn btn-success"  onClick={() => isEdit ? updatePatient(idSelected) :  addPatient()} value={isEdit ? 'Editar' : 'Registrar'}/>
             </div>
           </div>
         </div>
@@ -239,19 +289,19 @@ function App() {
         </div>
       </div>
 
-      <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="confirmModalLabel">Confirmar</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div className="modal fade" id="confirmModal" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="confirmModalLabel">Confirmar</h5>
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div className="modal-body">
               ¿Seguro que desea eliminar el paciente <span className="fw-bold">{name}</span>?
             </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-              <button type="button" class="btn btn-danger" data-bs-dismiss="modal" onClick={()=> deletePatient(idSelected)}>Aceptar</button>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+              <button type="button" className="btn btn-danger" data-bs-dismiss="modal" onClick={()=> deletePatient(idSelected)}>Aceptar</button>
             </div>
           </div>
         </div>
