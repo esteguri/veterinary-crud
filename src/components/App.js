@@ -322,7 +322,7 @@ function App() {
                 <div className="col-8"><p>{address}</p></div>
               </div>
               <div className="row mt-2 p-1">
-                <div className="col-4"><p className="fw-bold"><FontAwesomeIcon icon={faEnvelope} /> Dirección:</p></div>
+                <div className="col-4"><p className="fw-bold"><FontAwesomeIcon icon={faEnvelope} /> Correo:</p></div>
                 <div className="col-8"><p>{email}</p></div>
               </div>
             </div>
